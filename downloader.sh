@@ -19,7 +19,10 @@ function remove_file_if_invalid() {
   local date="$3"
 
   if [ -f "$file" ]; then
-    if [[ $(sha1sum "$file") = $(curl -s "https://dumps.wikimedia.org/$wiki/$date/$wiki-$date-sha1sums.txt" | grep "$file") ]]; then
+    actual_sha1sum=$(sha1sum "$file") &
+    expected_sha1sum=$(curl -s "https://dumps.wikimedia.org/$wiki/$date/$wiki-$date-sha1sums.txt" | grep "$file") &
+    wait
+    if [[ "$actual_sha1sum" = "$expected_sha1sum" ]]; then
       echo "Validating $file: ok"
     else
       rm "$file"
