@@ -5,11 +5,13 @@ function create_list_to_be_downloaded() {
   filename="$1"
   list=$(curl -s https://dumps.wikimedia.org/backup-index.html | cat | grep -v "(private data)" | grep "span class='done'" | sed -r 's/.*<a href="([^\/]+)\/([^"]+)">(.*)<\/a>.*/\1 \2/g' | tac)
   echo "$list" | while read wiki date; do
-    echo "Fetching files to download for $wiki $date"
-    dlpage=$(curl -s https://dumps.wikimedia.org/$wiki/$date/ | grep "$wiki-$date-pages-meta-history.*\.7z" | sed -r 's/.*<a href="([^"]+)">([^<]+)<\/a>.*/\2 https:\/\/dumps.wikimedia.org\1/g')
-    echo "$dlpage" | while read file url; do
-      echo "$wiki $date $file $url" >> "$filename"
-    done
+    if ! grep -sq "$wiki " "$filename" ; then
+      echo "Fetching files to download for $wiki $date"
+      dlpage=$(curl -s https://dumps.wikimedia.org/$wiki/$date/ | grep "$wiki-$date-pages-meta-history.*\.7z" | sed -r 's/.*<a href="([^"]+)">([^<]+)<\/a>.*/\2 https:\/\/dumps.wikimedia.org\1/g')
+      echo "$dlpage" | while read file url; do
+        echo "$wiki $date $file $url" >> "$filename"
+      done
+    fi
   done
 }
 
